@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: magicskunk
+  name: service-cicd-app
+spec:
+  type: LoadBalancer
+  # service matches deployment label
+  selector:
+    app: service-cicd-app
+  ports:
+    - port: 80
+      # matches container port
+      targetPort: 8080
+      name: http
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+# metadata defines labels
+metadata:
+  namespace: magicskunk
+  name: service-cicd-app
+  labels:
+    app: service-cicd-app
+# spec matches labels
+spec:
+  replicas: 2
+  selector:
+    # match #pod with label "app: service-cicd-app" (line 26). This way deployment which pods belong to it
+    matchLabels:
+      app: service-cicd-app
+  # Pod config
+  template:
+    metadata:
+      namespace: magicskunk
+      name: service-cicd-app
+      # define label "app: service-cicd-app" for #pod
+      labels:
+        app: service-cicd-app
+    spec:
+      containers:
+        - name: service-cicd-app
+          image: 847775666541.dkr.ecr.eu-central-1.amazonaws.com/magicskunk:master-9033db6c8ec6313d94aac3db389a4086168f6a7a
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 120
+            failureThreshold: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 120
+            failureThreshold: 10
+            timeoutSeconds: 5
+            periodSeconds: 3
+          ports:
+            - containerPort: 8080
+        - name: service-cicd-db
+          image: postgres:alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: magicskunk-servicecicd
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: awsecrcred
+
+---
