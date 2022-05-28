@@ -13,7 +13,7 @@ spec:
   type: LoadBalancer
   # service matches deployment label
   selector:
-    app: service-cicd-app
+    app: magicskunk-cicd-app
   ports:
     - port: 80
       # matches container port
@@ -27,24 +27,24 @@ kind: Deployment
 # metadata defines labels
 metadata:
   namespace: magicskunk-cicd-app
-  name: service-cicd-app
+  name: deployment-cicd-app
   labels:
-    app: service-cicd-app
+    app: magicskunk-cicd-app
 # spec matches labels
 spec:
   replicas: 2
   selector:
-    # match #pod with label "app: service-cicd-app" (line 26). This way deployment which pods belong to it
+    # match #pod with label "app: pod-cicd-app" (line 26). This way deployment which pods belong to it
     matchLabels:
-      app: service-cicd-app
+      app: magicskunk-cicd-app
   # Pod config
   template:
     metadata:
       namespace: magicskunk-cicd-app
-      name: service-cicd-app
-      # define label "app: service-cicd-app" for #pod
+      name: pod-cicd-app
+      # define label "app: pod-cicd-app" for #pod
       labels:
-        app: service-cicd-app
+        app: magicskunk-cicd-app
     spec:
       containers:
         - name: service-cicd-app
